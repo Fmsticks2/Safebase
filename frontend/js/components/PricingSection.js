@@ -4,8 +4,6 @@ class PricingSection {
     constructor() {
         this.container = document.getElementById('pricing-section');
         this.subscriptionContract = null;
-        this.stripeHandler = null;
-        this.initializeStripe();
         this.initializeWeb3();
         this.render();
     }
@@ -27,25 +25,6 @@ class PricingSection {
             } catch (error) {
                 console.error('Web3 initialization error:', error);
             }
-        }
-    }
-
-    initializeStripe() {
-        this.stripeHandler = Stripe(process.env.STRIPE_PUBLIC_KEY);
-    }
-
-    async handleStripeSubscription(planId) {
-        try {
-            const response = await fetch('/api/create-checkout-session', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ planId })
-            });
-            const session = await response.json();
-            await this.stripeHandler.redirectToCheckout({ sessionId: session.id });
-        } catch (error) {
-            console.error('Stripe subscription error:', error);
-            alert('Failed to process payment. Please try again.');
         }
     }
 
@@ -120,19 +99,13 @@ class PricingSection {
                             <h2 class="text-2xl font-semibold text-gray-900">Pro</h2>
                             <p class="mt-4 text-sm text-gray-500">Advanced security features for serious investors</p>
                             <p class="mt-8">
-                                <span class="text-4xl font-extrabold text-gray-900">$10</span>
+                                <span class="text-4xl font-extrabold text-gray-900">10 USDC</span>
                                 <span class="text-base font-medium text-gray-500">/mo</span>
                             </p>
-                            <div class="mt-8 space-y-2">
-                                <button onclick="pricingSection.handleStripeSubscription('pro')" 
-                                    class="block w-full bg-indigo-600 border border-transparent rounded-md py-2 text-sm font-semibold text-white text-center hover:bg-indigo-700">
-                                    Subscribe with Stripe
-                                </button>
-                                <button onclick="pricingSection.handleCryptoSubscription('pro')" 
-                                    class="block w-full bg-blue-600 border border-transparent rounded-md py-2 text-sm font-semibold text-white text-center hover:bg-blue-700">
-                                    Subscribe with Crypto
-                                </button>
-                            </div>
+                            <button onclick="pricingSection.handleCryptoSubscription('pro')" 
+                                class="mt-8 block w-full bg-blue-600 border border-transparent rounded-md py-2 text-sm font-semibold text-white text-center hover:bg-blue-700">
+                                Subscribe with USDC
+                            </button>
                         </div>
                         <div class="pt-6 pb-8 px-6">
                             <h3 class="text-xs font-medium text-gray-900 tracking-wide uppercase">What's included</h3>
@@ -165,19 +138,13 @@ class PricingSection {
                             <h2 class="text-2xl font-semibold text-gray-900">Elite</h2>
                             <p class="mt-4 text-sm text-gray-500">Maximum security for professional traders</p>
                             <p class="mt-8">
-                                <span class="text-4xl font-extrabold text-gray-900">$25</span>
+                                <span class="text-4xl font-extrabold text-gray-900">25 USDC</span>
                                 <span class="text-base font-medium text-gray-500">/mo</span>
                             </p>
-                            <div class="mt-8 space-y-2">
-                                <button onclick="pricingSection.handleStripeSubscription('elite')" 
-                                    class="block w-full bg-indigo-600 border border-transparent rounded-md py-2 text-sm font-semibold text-white text-center hover:bg-indigo-700">
-                                    Subscribe with Stripe
-                                </button>
-                                <button onclick="pricingSection.handleCryptoSubscription('elite')" 
-                                    class="block w-full bg-blue-600 border border-transparent rounded-md py-2 text-sm font-semibold text-white text-center hover:bg-blue-700">
-                                    Subscribe with Crypto
-                                </button>
-                            </div>
+                            <button onclick="pricingSection.handleCryptoSubscription('elite')" 
+                                class="mt-8 block w-full bg-blue-600 border border-transparent rounded-md py-2 text-sm font-semibold text-white text-center hover:bg-blue-700">
+                                Subscribe with USDC
+                            </button>
                         </div>
                         <div class="pt-6 pb-8 px-6">
                             <h3 class="text-xs font-medium text-gray-900 tracking-wide uppercase">What's included</h3>
@@ -198,13 +165,7 @@ class PricingSection {
                                     <svg class="flex-shrink-0 h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                                     </svg>
-                                    <span class="text-sm text-gray-500">Revoke tool access</span>
-                                </li>
-                                <li class="flex space-x-3">
-                                    <svg class="flex-shrink-0 h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                    </svg>
-                                    <span class="text-sm text-gray-500">Developer API access</span>
+                                    <span class="text-sm text-gray-500">Priority support</span>
                                 </li>
                             </ul>
                         </div>
@@ -213,16 +174,6 @@ class PricingSection {
             </div>
         `;
     }
-
-    handleFreeSignup() {
-        window.location.href = '/register';
-    }
 }
-
-// Initialize pricing section when the DOM is loaded
-let pricingSection;
-document.addEventListener('DOMContentLoaded', () => {
-    pricingSection = new PricingSection();
-});
 
 export default PricingSection;

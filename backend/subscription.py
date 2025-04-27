@@ -3,13 +3,8 @@ from datetime import datetime, timedelta
 from flask import request, jsonify
 import jwt
 from web3 import Web3
-from eth_account import Account
-import stripe
 import os
 from collections import defaultdict
-
-# Initialize Stripe
-stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 
 # Initialize Web3
 w3 = Web3(Web3.HTTPProvider(os.getenv('BASE_RPC_URL')))
@@ -37,15 +32,6 @@ class SubscriptionService:
             print(f"Error checking subscription: {e}")
             return None
 
-    def validate_stripe_subscription(self, user_id):
-        """Validate Stripe subscription status"""
-        try:
-            subscriptions = stripe.Subscription.list(customer=user_id)
-            return len(subscriptions.data) > 0 and subscriptions.data[0].status == 'active'
-        except Exception as e:
-            print(f"Error validating Stripe subscription: {e}")
-            return False
-
     def check_free_tier_limit(self, user_address):
         """Check if free tier user has exceeded daily limit"""
         user_limit = self.free_tier_limits[user_address]
@@ -63,24 +49,7 @@ class SubscriptionService:
         user_limit['count'] += 1
         return True
 
-    def create_stripe_checkout_session(self, plan_id):
-        """Create Stripe checkout session for subscription"""
-        try:
-            price_id = os.getenv(f'STRIPE_PRICE_ID_{plan_id.upper()}')
-            session = stripe.checkout.Session.create(
-                payment_method_types=['card'],
-                line_items=[{
-                    'price': price_id,
-                    'quantity': 1,
-                }],
-                mode='subscription',
-                success_url=os.getenv('STRIPE_SUCCESS_URL'),
-                cancel_url=os.getenv('STRIPE_CANCEL_URL'),
-            )
-            return session
-        except Exception as e:
-            print(f"Error creating checkout session: {e}")
-            return None
+
 
 # Initialize subscription service
 subscription_service = SubscriptionService()
@@ -118,10 +87,11 @@ def require_subscription(min_tier='free'):
                     if min_tier == 'elite' and crypto_sub['tier'] == 'elite':
                         return f(*args, **kwargs)
 
-                # Check Stripe subscription
-                stripe_sub = subscription_service.validate_stripe_subscription(payload.get('stripe_customer_id'))
-                if stripe_sub:
-                    return f(*args, **kwargs)
+                # No valid subscription found
+                return jsonify({
+                    'error': f'This endpoint requires {min_tier} subscription',
+                    'upgrade_url': '/pricing'
+                }), 403
 
                 return jsonify({
                     'error': f'This endpoint requires {min_tier} subscription',
