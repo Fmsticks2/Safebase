@@ -4,8 +4,10 @@ import os
 from dotenv import load_dotenv
 from web3 import Web3
 import openai
+import tweepy
 from datetime import datetime
 from web3.contract_utils import ContractAnalyzer
+from textblob import TextBlob
 
 # Load environment variables
 load_dotenv()
@@ -18,7 +20,7 @@ CORS(app)
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
 # Configure Web3 and ContractAnalyzer
-w3 = Web3(Web3.HTTPProvider(os.getenv('BASE_RPC_URL')))
+w3 = Web3(Web3.HTTPProvider(os.getenv('KRNL_RPC_URL')))
 contract_analyzer = ContractAnalyzer()
 
 def analyze_contract(address):
@@ -129,6 +131,15 @@ def analyze_url(url):
             'explanation': f'Error analyzing URL: {str(e)}'
         }
 
+# Initialize Twitter API
+twitter_auth = tweepy.OAuth1UserHandler(
+    os.getenv('TWITTER_API_KEY'),
+    os.getenv('TWITTER_API_SECRET'),
+    os.getenv('TWITTER_ACCESS_TOKEN'),
+    os.getenv('TWITTER_ACCESS_TOKEN_SECRET')
+)
+twitter_api = tweepy.API(twitter_auth)
+
 # Initialize watchlist storage
 watchlist = {}
 
@@ -191,6 +202,74 @@ def check():
         result = analyze_url(input_value)
 
     return jsonify(result)
+
+def analyze_twitter_sentiment(query, limit=50):
+    """Analyze Twitter sentiment about a project."""
+    try:
+        tweets = twitter_api.search_tweets(q=query, count=limit)
+        
+        positive = 0
+        negative = 0
+        neutral = 0
+        links = set()
+        
+        for tweet in tweets:
+            analysis = TextBlob(tweet.text)
+            
+            # Extract safe links
+            for url in tweet.entities.get('urls', []):
+                if url.get('expanded_url'):
+                    links.add(url['expanded_url'])
+            
+            if analysis.sentiment.polarity > 0.1:
+                positive += 1
+            elif analysis.sentiment.polarity < -0.1:
+                negative += 1
+            else:
+                neutral += 1
+        
+        return {
+            'positive': positive,
+            'negative': negative,
+            'neutral': neutral,
+            'links': list(links),
+            'total': len(tweets)
+        }
+    except Exception as e:
+        return {'error': str(e)}
+
+@app.route('/api/social', methods=['POST'])
+def social_analysis():
+    data = request.get_json()
+    query = data.get('query', '')
+    
+    if not query:
+        return jsonify({'error': 'No query provided'}), 400
+    
+    twitter_data = analyze_twitter_sentiment(query)
+    
+    # Generate investment recommendation
+    if 'error' in twitter_data:
+        recommendation = 'Unable to analyze social sentiment'
+    elif twitter_data['total'] == 0:
+        recommendation = 'No social media data found'
+    else:
+        positive_ratio = twitter_data['positive'] / twitter_data['total']
+        negative_ratio = twitter_data['negative'] / twitter_data['total']
+        
+        if positive_ratio > 0.7 and negative_ratio < 0.1:
+            recommendation = 'Strong positive sentiment - Good investment'
+        elif positive_ratio > negative_ratio:
+            recommendation = 'Mostly positive sentiment - Consider investing'
+        elif negative_ratio > positive_ratio:
+            recommendation = 'Mostly negative sentiment - Be cautious'
+        else:
+            recommendation = 'Neutral sentiment - Do more research'
+    
+    return jsonify({
+        'twitter': twitter_data,
+        'recommendation': recommendation
+    })
 
 if __name__ == '__main__':
     app.run(host=os.getenv('HOST', '0.0.0.0'),

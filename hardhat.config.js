@@ -12,37 +12,37 @@ module.exports = {
     }
   },
   networks: {
-    base: {
-      url: process.env.BASE_RPC_URL || 'https://mainnet.base.org',
+    krnl: {
+      url: process.env.KRNL_RPC_URL || 'https://mainnet.krnl.org',
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
-      chainId: 8453
+      chainId: 1234
     },
-    'base-goerli': {
-      url: process.env.BASE_TESTNET_RPC_URL || 'https://goerli.base.org',
+    'krnl-testnet': {
+      url: process.env.KRNL_TESTNET_RPC_URL || 'https://testnet.krnl.org',
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
-      chainId: 84531
+      chainId: 12345
     }
   },
   etherscan: {
     apiKey: {
-      base: process.env.BASESCAN_API_KEY,
-      'base-goerli': process.env.BASESCAN_API_KEY
+      krnl: process.env.KRNLSCAN_API_KEY,
+      'krnl-testnet': process.env.KRNLSCAN_API_KEY
     },
     customChains: [
       {
-        network: 'base',
-        chainId: 8453,
+        network: 'krnl',
+        chainId: 1234,
         urls: {
-          apiURL: 'https://api.basescan.org/api',
-          browserURL: 'https://basescan.org'
+          apiURL: 'https://api.krnlscan.org/api',
+          browserURL: 'https://krnlscan.org'
         }
       },
       {
-        network: 'base-goerli',
-        chainId: 84531,
+        network: 'krnl-testnet',
+        chainId: 12345,
         urls: {
-          apiURL: 'https://api-goerli.basescan.org/api',
-          browserURL: 'https://goerli.basescan.org'
+          apiURL: 'https://api-testnet.krnlscan.org/api',
+          browserURL: 'https://testnet.krnlscan.org'
         }
       }
     ]
