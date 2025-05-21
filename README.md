@@ -1,31 +1,49 @@
-# 🛡️ SafeBase - AI-Powered Web3 Scam Detector
+# 🛡️ SafeBase - KRNL Network Deployment Tool
 
-SafeBase is a simple yet powerful dApp built on the Base ecosystem that helps users detect malicious smart contracts and phishing links using AI. Stay safe while exploring the decentralized web.
+SafeBase provides tools for deploying and verifying smart contracts on the KRNL network with Python and Web3.py.
 
 ## 🚀 Features
-- Paste a smart contract address or URL
-- AI evaluates risk using heuristic + behavioral analysis
-- Instant feedback: Safe ✅ | Risky ⚠️ | Scam ❌
-- Optional on-chain logging (coming soon)
+- Compile Solidity contracts
+- Deploy contracts to KRNL network
+- Verify contracts on KRNL explorer
+- Environment variable configuration
 
 ## 🧠 Powered By
-- OpenAI (for natural language understanding)
-- Base L2 (for gas-efficient operations)
-- Ethers.js (smart contract interactions)
-- Node.js / Python Flask backend
-
-## 🖥️ Live Demo
-Coming soon...
+- Python 3.x
+- Web3.py for blockchain interactions
+- Solcx for contract compilation
+- Dotenv for environment management
 
 ## 🛠️ Tech Stack
-- Frontend: HTML, CSS, JavaScript (Vanilla or React)
-- Backend: Flask (Python) or Node.js (Express)
-- AI: OpenAI API (GPT-4), or Local NLP Model
-- Web3: Ethers.js, Alchemy/Base RPC
+- Python 3.x
+- Web3.py
+- Solcx
+- Dotenv
 
 ## ⚙️ Setup Instructions
 
 1. Clone the repo
 ```bash
-git clone https://github.com/yourusername/safebase.git
+git clone https://github.com/context7/safebase.git
 cd safebase
+```
+
+2. Install dependencies
+```bash
+pip install -r requirements.txt
+```
+
+3. Configure environment variables
+Create a `.env` file with:
+```
+KRNL_RPC_URL=your_krnl_rpc_url
+DEPLOYER_PRIVATE_KEY=your_private_key
+```
+
+4. Run deployment script
+```bash
+python scripts/deploy_krnl.py path/to/contract.sol
+```
+
+## 📄 License
+MIT
