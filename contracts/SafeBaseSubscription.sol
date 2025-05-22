@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-contract SafeBaseSubscription {
+import {KRNL, KrnlPayload, KernelParameter, KernelResponse} from "./KRNL.sol";
+
+contract SafeBaseSubscription is KRNL {
     enum SubscriptionTier { Free, Pro, Elite }
 
     struct Subscription {
@@ -11,7 +13,6 @@ contract SafeBaseSubscription {
     }
 
     mapping(address => Subscription) public subscriptions;
-    address public owner;
     mapping(SubscriptionTier => uint256) public tierPrices;
     mapping(SubscriptionTier => uint256) public tierDurations;
 
@@ -20,36 +21,25 @@ contract SafeBaseSubscription {
     event TierPriceUpdated(SubscriptionTier tier, uint256 price);
     event TierDurationUpdated(SubscriptionTier tier, uint256 duration);
 
-    constructor() {
-        owner = msg.sender;
-        
+    constructor(address _tokenAuthorityPublicKey) KRNL(_tokenAuthorityPublicKey) {
         // Set initial prices (in wei)
         tierPrices[SubscriptionTier.Pro] = 0.01 ether;
         tierPrices[SubscriptionTier.Elite] = 0.05 ether;
-
         // Set subscription durations (in seconds)
         tierDurations[SubscriptionTier.Pro] = 30 days;
         tierDurations[SubscriptionTier.Elite] = 30 days;
     }
 
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Only owner can call this function");
-        _;
-    }
-
-    function subscribe(SubscriptionTier tier) external payable {
+    function subscribe(KrnlPayload memory krnlPayload, SubscriptionTier tier) external payable onlyAuthorized(krnlPayload, abi.encode(tier)) {
         require(tier != SubscriptionTier.Free, "Cannot purchase free tier");
         require(msg.value == tierPrices[tier], "Incorrect payment amount");
-
         uint256 duration = tierDurations[tier];
         uint256 expiryTime = block.timestamp + duration;
-
         subscriptions[msg.sender] = Subscription({
             isValid: true,
             tier: tier,
             expiryTime: expiryTime
         });
-
         emit SubscriptionPurchased(msg.sender, tier, expiryTime);
     }
 
@@ -80,7 +70,7 @@ contract SafeBaseSubscription {
     }
 
     function withdrawFunds() external onlyOwner {
-        (bool success, ) = owner.call{value: address(this).balance}("");
+        (bool success, ) = owner().call{value: address(this).balance}("");
         require(success, "Transfer failed");
     }
 }
